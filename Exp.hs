@@ -47,7 +47,10 @@ unescape 'n' = '\n'
 unescape c   = c
 
 regexp :: Parser Regexp
-regexp = cat <$> A.many1 (regexp4 >>= regexp2) <?> "regexp"
+regexp = regexp1 <* A.endOfInput <?> "regexp"
+
+regexp1 :: Parser Regexp
+regexp1 = cat <$> A.many1 (regexp4 >>= regexp2) <?> "regexp1"
 
 cat :: [Regexp] -> Regexp
 cat [e] = e -- Prevent one element sequences
@@ -72,7 +75,7 @@ regexp4 = lit <|> dot <|> bol <|> eol <|> grp <?> "regexp4"
           dot = A.char '.' *> pure Dot
           bol = A.char '^' *> pure BOL
           eol = A.char '$' *> pure EOL
-          grp = Group <$> (A.char '(' *> regexp <* A.char ')')
+          grp = Group <$> (A.char '(' *> regexp1 <* A.char ')')
 
 main :: IO ()
 main = do as <- getArgs
