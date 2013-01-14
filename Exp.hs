@@ -57,7 +57,7 @@ cat [e] = e -- Prevent one element sequences
 cat es  = Concat es
 
 regexp2 :: Regexp -> Parser Regexp
-regexp2 re = do x <- A.option Nothing (opt <|> star <|> plus)
+regexp2 re = do x <- A.option Nothing (opt <|> star <|> plus) <?> "regexp2"
                 case x of
                   Nothing -> pure re
                   Just op -> regexp2 $ insertOp op re
