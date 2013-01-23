@@ -8,7 +8,11 @@
    e4: literal | charclass | '.' | '^' | '$' | '(' e0 ')'
 -}
 
-module Main (main) where
+module Expression
+    (
+      Regexp(..)
+    {-, parse-}
+    ) where
 
 import System.Environment
 import Control.Applicative
@@ -17,18 +21,17 @@ import Data.Attoparsec.Text (Parser, (<?>))
 import qualified Data.Text as T
 import qualified Data.Attoparsec.Text as A
 
-data Regexp = Concat [Regexp]
-            | Group Regexp
-            | Literal String
-            | Range Char Char
+data Regexp = Literal String
+            | Range [(Char, Char)]
             | Dot
             | BOL
             | EOL
+            | Concat [Regexp]
+            | Group Regexp
             | Optional Regexp
             | Star Regexp
             | Plus Regexp
             | Or Regexp Regexp
-            deriving Show
 
 type RegexpOp = Regexp -> Regexp
 
@@ -77,8 +80,11 @@ regexp4 = lit <|> dot <|> bol <|> eol <|> grp <?> "regexp4"
           eol = A.char '$' *> pure EOL
           grp = Group <$> (A.char '(' *> regexp1 <* A.char ')')
 
-main :: IO ()
-main = do as <- getArgs
-          case as of
-            [s] -> print $ A.parseOnly regexp $ T.pack s
-            _   -> putStrLn "Give me one f*cking arg!"
+{-main :: IO ()-}
+{-main = do as <- getArgs-}
+{-          case as of-}
+{-            [s] -> print $ A.parseOnly regexp $ T.pack s-}
+{-            _   -> putStrLn "Give me one f*cking arg!"-}
+
+{-parse :: String -> Regexp-}
+{-A. -- XXX-}
