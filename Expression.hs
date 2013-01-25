@@ -11,10 +11,9 @@
 module Expression
     (
       Regexp(..)
-    {-, parse-}
+    , regexp
     ) where
 
-import System.Environment
 import Control.Applicative
 import Data.Attoparsec.Text (Parser, (<?>))
 
@@ -79,12 +78,3 @@ regexp4 = lit <|> dot <|> bol <|> eol <|> grp <?> "regexp4"
           bol = A.char '^' *> pure BOL
           eol = A.char '$' *> pure EOL
           grp = Group <$> (A.char '(' *> regexp1 <* A.char ')')
-
-{-main :: IO ()-}
-{-main = do as <- getArgs-}
-{-          case as of-}
-{-            [s] -> print $ A.parseOnly regexp $ T.pack s-}
-{-            _   -> putStrLn "Give me one f*cking arg!"-}
-
-{-parse :: String -> Regexp-}
-{-A. -- XXX-}

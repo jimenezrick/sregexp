@@ -1,4 +1,4 @@
-module Main (main) where
+module Matcher (matcher) where
 
 -- XXX:   Use Attoparsec for ByteString!
 -- FIXME: Si tenemos un ^ lo primero de todo, poner un \n al princpio
@@ -7,7 +7,7 @@ module Main (main) where
 import System.IO
 import Data.Monoid
 import Control.Applicative
-import Data.Attoparsec.Text (Parser, (<?>))
+import Data.Attoparsec.Text (Parser)
 
 import qualified Data.ByteString as B
 import qualified Data.Text as T
@@ -60,23 +60,3 @@ skipTo' _              = mempty
 wire :: (b -> b -> b) -> [a -> b] -> (a -> b)
 wire op preds = foldr1 f preds
     where f = \p p' -> \c -> p c `op` p' c
-
-
-
-
-
-
-{-main :: IO ()-}
-{-main = do as <- getArgs-}
-{-          case as of-}
-{-            [s] -> print $ A.parseOnly (matcher' (Concat [Literal "aa", Literal "b"])) (T.pack s)-}
-{-            _   -> putStrLn "Give me one f*cking arg!"-}
-
-
-
-
-
-main :: IO ()
-main = do c <- B.hGetContents stdin
-          let t = TE.decodeUtf8 c
-          print $ A.parseOnly (matcher (Concat [Literal "aa", Literal "b"])) t
