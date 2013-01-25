@@ -6,7 +6,7 @@ import System.Environment
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as B
 import qualified Data.Attoparsec.Text as A
 
 import Expression
