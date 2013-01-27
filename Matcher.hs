@@ -4,7 +4,6 @@ module Matcher (matcher) where
 -- FIXME: Si tenemos un ^ lo primero de todo, poner un \n al princpio
 --        para que lo consuma, sin el skipTo
 
-import Data.Monoid
 import Control.Applicative
 import Data.Attoparsec.Text (Parser)
 
@@ -26,8 +25,8 @@ matcher' (Range rs)    = T.singleton <$> (A.satisfy $ wire (||) $ map p rs)
 matcher' Dot           = T.singleton <$> A.anyChar
 matcher' BOL           = A.char '\n' *> pure T.empty -- FIXME: Doesn't match input beginning
 matcher' EOL           = A.char '\n' *> pure T.empty <|> A.endOfInput *> pure T.empty
-matcher' (Concat res)   = T.concat <$> (sequence $ map matcher' res)
-matcher' (Group _)     = error "matcher': invalid argument"
+matcher' (Concat res)  = T.concat <$> (sequence $ map matcher' res)
+matcher' (Group res)   = matcher' $ Concat [res]
 matcher' (Optional re) = A.option T.empty $ matcher' re
 matcher' (Star re)     = T.concat <$> (A.many' $ matcher' re)
 matcher' (Plus re)     = T.concat <$> (A.many1 $ matcher' re)
@@ -48,11 +47,11 @@ skipTo' (Concat (re:res))
     | Optional x <- re = skipTo' x ++ (skipTo' $ Concat res)
     | Star x <- re     = skipTo' x ++ (skipTo' $ Concat res)
     | otherwise        = skipTo' re
-skipTo' (Concat [])    = mempty
-skipTo' (Group _)      = error "skipTo': invalid argument"
+skipTo' (Concat [])    = []
+skipTo' (Group res)    = skipTo' $ Concat [res]
 skipTo' (Plus re)      = skipTo' re
 skipTo' (Or re1 re2)   = skipTo' re1 ++ skipTo' re2
-skipTo' _              = mempty
+skipTo' _              = []
 
 wire :: (b -> b -> b) -> [a -> b] -> (a -> b)
 wire op preds = foldr1 f preds
