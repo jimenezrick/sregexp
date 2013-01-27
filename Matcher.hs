@@ -20,15 +20,15 @@ matcher :: Regexp -> Parser [T.Text]
 matcher re = skipTo re *> (matches <|> retry <|> eof)
     where matches = (:) <$> matcher' re <*> matcher re
           retry   = A.anyChar *> matcher re
-          eof     = A.endOfInput *> mempty
+          eof     = A.endOfInput *> pure []
 
 matcher' :: Regexp -> Parser T.Text
 matcher' (Literal s)   = A.string $ T.pack s
 matcher' (Range rs)    = T.singleton <$> (A.satisfy $ wire (||) $ map p rs)
     where p = \(c1, c2) -> \c -> c >= c1 && c <= c2
 matcher' Dot           = T.singleton <$> A.anyChar
-matcher' BOL           = A.char '\n' *> mempty -- FIXME: Doesn't match input beginning
-matcher' EOL           = A.char '\n' *> mempty <|> A.endOfInput *> mempty
+matcher' BOL           = A.char '\n' *> pure T.empty -- FIXME: Doesn't match input beginning
+matcher' EOL           = A.char '\n' *> pure T.empty <|> A.endOfInput *> pure T.empty
 matcher' (Concat res)   = T.concat <$> (sequence $ map matcher' res)
 matcher' (Group _)     = error "matcher': invalid argument"
 matcher' (Optional re) = A.option T.empty $ matcher' re
@@ -38,7 +38,7 @@ matcher' (Or re1 re2)  = matcher' re1 <|> matcher' re2
 
 skipTo :: Regexp -> Parser ()
 skipTo re = case skipTo' re of
-              []    -> mempty
+              []    -> pure ()
               preds -> A.skipWhile $ wire (&&) preds
 
 skipTo' :: Regexp -> [Char -> Bool]

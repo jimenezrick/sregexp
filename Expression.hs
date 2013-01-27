@@ -31,6 +31,7 @@ data Regexp = Literal String
             | Star Regexp
             | Plus Regexp
             | Or Regexp Regexp
+            deriving Show
 
 type RegexpOp = Regexp -> Regexp
 
