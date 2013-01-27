@@ -17,7 +17,6 @@ module Expression
 import Control.Applicative
 import Data.Attoparsec.Text (Parser, (<?>))
 
-import qualified Data.Text as T
 import qualified Data.Attoparsec.Text as A
 
 data Regexp = Literal String

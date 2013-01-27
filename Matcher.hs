@@ -4,14 +4,11 @@ module Matcher (matcher) where
 -- FIXME: Si tenemos un ^ lo primero de todo, poner un \n al princpio
 --        para que lo consuma, sin el skipTo
 
-import System.IO
 import Data.Monoid
 import Control.Applicative
 import Data.Attoparsec.Text (Parser)
 
-import qualified Data.ByteString as B
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
 import qualified Data.Attoparsec.Text as A
 
 import Expression
