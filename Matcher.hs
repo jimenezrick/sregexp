@@ -25,12 +25,19 @@ matcher' (Range rs)    = T.singleton <$> (A.satisfy $ wire (||) $ map p rs)
 matcher' Dot           = T.singleton <$> A.anyChar
 matcher' BOL           = A.char '\n' *> pure T.empty -- FIXME: Doesn't match input beginning
 matcher' EOL           = A.char '\n' *> pure T.empty <|> A.endOfInput *> pure T.empty
-matcher' (Concat res)  = T.concat <$> (sequence $ map matcher' res)
+matcher' (Concat (re:res))
+    | Star x <- re     = minMany (matcher' x) (matcher' $ Concat res)
+    | Plus x <- re     = T.append <$> matcher' x <*> minMany (matcher' x) (matcher' $ Concat res)
+    | otherwise        = T.append <$> matcher' re <*> (matcher' $ Concat res)
+matcher' (Concat [])   = pure T.empty
 matcher' (Group res)   = matcher' $ Concat [res]
 matcher' (Optional re) = A.option T.empty $ matcher' re
 matcher' (Star re)     = T.concat <$> (A.many' $ matcher' re)
 matcher' (Plus re)     = T.concat <$> (A.many1 $ matcher' re)
 matcher' (Or re1 re2)  = matcher' re1 <|> matcher' re2
+
+minMany :: Parser T.Text -> Parser T.Text -> Parser T.Text
+minMany r n = n <|> T.append <$> r <*> minMany r n
 
 skipTo :: Regexp -> Parser ()
 skipTo re = case skipTo' re of
