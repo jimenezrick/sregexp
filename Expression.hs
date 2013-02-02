@@ -35,9 +35,9 @@ data Regexp = Literal String
 type RegexpOp = Regexp -> Regexp
 
 char :: Parser Char
-char = chr <|> esc <?> "char"
-    where chr = A.satisfy $ not . isEspecialChar
-          esc = A.char '\\' *> (unescape <$> A.anyChar)
+char = esc <|> chr <?> "char"
+    where esc = A.char '\\' *> (unescape <$> A.anyChar)
+          chr = A.satisfy $ not . isEspecialChar
 
 isEspecialChar :: Char -> Bool
 isEspecialChar c = c `elem` ['|', '?', '*', '+', '.', '^', '$', '(', ')', '[', ']']
