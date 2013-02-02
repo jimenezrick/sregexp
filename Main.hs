@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main (main) where
 
 import Data.List
@@ -26,4 +28,4 @@ main = do args <- getArgs
     where run p i     = do re <- A.parseOnly regexp (T.pack p)
                            A.parseOnly (matcher re) i
           perror      = hPutStrLn stderr . (intercalate " ")
-          presults rs = mapM_ (B.putStrLn . TE.encodeUtf8) rs
+          presults rs = B.putStrLn $ B.intercalate "\n--\n" $ map TE.encodeUtf8 rs
