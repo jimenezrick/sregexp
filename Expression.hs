@@ -49,7 +49,10 @@ unescape 'n' = '\n'
 unescape c   = c
 
 regexp :: Parser Regexp
-regexp = regexp1 <* A.endOfInput <?> "regexp"
+regexp = regexp0 <* A.endOfInput <?> "regexp"
+
+regexp0 :: Parser Regexp
+regexp0 = Or <$> regexp1 <*> (A.char '|' *> regexp0) <|> regexp1 <?> "regexp0"
 
 regexp1 :: Parser Regexp
 regexp1 = cat <$> A.many1 (regexp4 >>= regexp2) <?> "regexp1"
@@ -77,4 +80,4 @@ regexp4 = lit <|> dot <|> bol <|> eol <|> grp <?> "regexp4"
           dot = A.char '.' *> pure Dot
           bol = A.char '^' *> pure BOL
           eol = A.char '$' *> pure EOL
-          grp = Group <$> (A.char '(' *> regexp1 <* A.char ')')
+          grp = Group <$> (A.char '(' *> regexp0 <* A.char ')')
