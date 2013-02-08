@@ -14,7 +14,10 @@ import Expression
 
 matcher :: Regexp -> Parser [T.Text]
 matcher re = skipTo re *> (matches <|> retry <|> eof)
-    where matches = (:) <$> matcher' re <*> matcher re
+    where matches = do r <- matcher' re
+                       if T.null r
+                         then retry
+                         else (:) <$> pure r <*> matcher re
           retry   = A.anyChar *> matcher re
           eof     = A.endOfInput *> pure []
 
