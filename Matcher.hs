@@ -1,9 +1,5 @@
 module Matcher (matcher) where
 
--- XXX:   Use Attoparsec for ByteString!
--- FIXME: Si tenemos un ^ lo primero de todo, poner un \n al princpio
---        para que lo consuma, sin el skipTo
-
 import Control.Applicative
 import Data.Attoparsec.Text (Parser)
 
@@ -13,20 +9,41 @@ import qualified Data.Attoparsec.Text as A
 import Expression
 
 matcher :: Regexp -> Parser [T.Text]
-matcher re = skipTo re *> (matches <|> retry <|> eof)
-    where matches = do r <- matcher' re
+matcher re =
+    case takeBol re of
+      Nothing    -> loop re
+      Just woBol -> do r <- matcher' woBol
                        if T.null r
-                         then retry
-                         else (:) <$> pure r <*> matcher re
-          retry   = A.anyChar *> matcher re
-          eof     = A.endOfInput *> pure []
+                         then loop re
+                         else (:) <$> pure r <*> loop re
+    where loop re'    = skipTo re' *> (matches re' <|> retry re' <|> eof)
+          matches re' = do r <- matcher' re'
+                           if T.null r
+                             then retry re'
+                             else (:) <$> pure r <*> loop re'
+          retry re'   = A.anyChar *> loop re'
+          eof         = A.endOfInput *> pure []
+
+
+
+
+
+-- XXX
+takeBol :: Regexp -> Maybe Regexp
+takeBol BOL              = Just $ Concat []
+takeBol (Concat (BOL:res)) = Just $ Concat res
+-- XXX
+
+
+
+
 
 matcher' :: Regexp -> Parser T.Text
 matcher' (Literal s)   = A.string $ T.pack s
 matcher' (Range rs)    = T.singleton <$> (A.satisfy $ wire (||) $ map p rs)
     where p = \(c1, c2) -> \c -> c >= c1 && c <= c2
 matcher' Dot           = T.singleton <$> A.anyChar
-matcher' BOL           = A.char '\n' *> pure T.empty -- FIXME: Doesn't match input beginning
+matcher' BOL           = A.char '\n' *> pure T.empty
 matcher' EOL           = A.char '\n' *> pure T.empty <|> A.endOfInput *> pure T.empty
 matcher' (Concat (re:res))
     | Star x <- re     = minMany (matcher' x) (matcher' $ Concat res)
