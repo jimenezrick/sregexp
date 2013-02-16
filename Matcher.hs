@@ -30,8 +30,11 @@ matcher re =
 
 -- XXX
 takeBol :: Regexp -> Maybe Regexp
-takeBol BOL              = Just $ Concat []
+takeBol BOL                = Just $ Concat []
 takeBol (Concat (BOL:res)) = Just $ Concat res
+
+
+takeBol _                  = Nothing
 -- XXX
 
 
