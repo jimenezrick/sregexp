@@ -20,7 +20,7 @@ import Data.Attoparsec.Text (Parser, (<?>))
 import qualified Data.Attoparsec.Text as A
 
 data Regexp = Literal String
-            | Range [(Char, Char)]
+            | Range [(Char, Char)] -- TODO: nextToken handle char's and Range cases
             | Dot
             | BOL
             | EOL

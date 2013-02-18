@@ -1,6 +1,7 @@
 module Matcher (matcher) where
 
 import Control.Applicative
+import Data.Text (Text)
 import Data.Attoparsec.Text (Parser)
 
 import qualified Data.Text as T
@@ -8,7 +9,7 @@ import qualified Data.Attoparsec.Text as A
 
 import Expression
 
-matcher :: Regexp -> Parser [T.Text]
+matcher :: Regexp -> Parser [Text]
 matcher re =
     case takeBol re of
       Nothing    -> loop re
@@ -41,25 +42,25 @@ takeBol _                  = Nothing
 
 
 
-matcher' :: Regexp -> Parser T.Text
+matcher' :: Regexp -> Parser Text
 matcher' (Literal s)   = A.string $ T.pack s
 matcher' (Range rs)    = T.singleton <$> (A.satisfy $ wire (||) $ map p rs)
     where p = \(c1, c2) -> \c -> c >= c1 && c <= c2
 matcher' Dot           = T.singleton <$> A.anyChar
-matcher' BOL           = A.char '\n' *> pure T.empty
-matcher' EOL           = A.char '\n' *> pure T.empty <|> A.endOfInput *> pure T.empty
+matcher' BOL           = A.char '\n' *> emptyMatch
+matcher' EOL           = A.char '\n' *> emptyMatch <|> A.endOfInput *> emptyMatch
 matcher' (Concat (re:res))
     | Star x <- re     = minMany (matcher' x) (matcher' $ Concat res)
     | Plus x <- re     = T.append <$> matcher' x <*> minMany (matcher' x) (matcher' $ Concat res)
     | otherwise        = T.append <$> matcher' re <*> (matcher' $ Concat res)
-matcher' (Concat [])   = pure T.empty
+matcher' (Concat [])   = emptyMatch
 matcher' (Group res)   = matcher' $ Concat [res]
 matcher' (Optional re) = A.option T.empty $ matcher' re
 matcher' (Star re)     = T.concat <$> (A.many' $ matcher' re)
 matcher' (Plus re)     = T.concat <$> (A.many1 $ matcher' re)
 matcher' (Or re1 re2)  = matcher' re1 <|> matcher' re2
 
-minMany :: Parser T.Text -> Parser T.Text -> Parser T.Text
+minMany :: Parser Text -> Parser Text -> Parser Text
 minMany r n = n <|> T.append <$> r <*> minMany r n
 
 skipTo :: Regexp -> Parser ()
@@ -86,3 +87,6 @@ skipTo' _              = []
 wire :: (b -> b -> b) -> [a -> b] -> (a -> b)
 wire op preds = foldr1 f preds
     where f = \p p' -> \c -> p c `op` p' c
+
+emptyMatch :: Parser Text
+emptyMatch = pure T.empty
